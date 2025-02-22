@@ -1,10 +1,10 @@
-import { Controller, Get, Logger } from '@nestjs/common';
-import { isEmail } from 'class-validator';
+import { Controller, Logger } from '@nestjs/common';
 import { get, isEmpty } from 'lodash';
-import { Observable } from 'rxjs';
+import { ErrorDictionary } from 'src/enums/error.dictionary';
 import { EGender } from 'src/enums/gender';
 import {
   CreateUserRequest,
+  GetUserByUserNameRequest,
   GetUserRequest,
   GetUserResponse,
   ManageUserResponse,
@@ -88,7 +88,7 @@ export class UsersController implements UserServiceController {
     }
 
     try {
-      await this.usersService.updateById(id, request);
+      await this.usersService.updateById(id, request as any);
 
       return {
         id: request.id,
@@ -104,5 +104,61 @@ export class UsersController implements UserServiceController {
         errMessage: err.message,
       };
     }
+  }
+
+  async isTakenEmail(request: {
+    email: string;
+  }): Promise<{ isTaken: boolean }> {
+    const { email } = request;
+    this.logger.log(`>>> check email: ${email}`);
+
+    const isTaken = await this.usersService.isTakenEmail(email);
+
+    return { isTaken };
+  }
+
+  async isTakenPhoneNumber(request: {
+    phoneNumber: string;
+  }): Promise<{ isTaken: boolean }> {
+    const { phoneNumber } = request;
+    this.logger.log(`>>> check phone number: ${phoneNumber}`);
+
+    const isTaken = await this.usersService.isTakenPhoneNumber(phoneNumber);
+
+    return { isTaken };
+  }
+
+  async getUserByUserName(
+    request: GetUserByUserNameRequest,
+  ): Promise<ManageUserResponse> {
+    const { username, password } = request;
+    this.logger.log(`>>> get user by username: ${username}`);
+
+    const user = await this.usersService.getUserByUsername(username);
+
+    if (isEmpty(user)) {
+      return {
+        id: '',
+        message: 'User not found',
+        code: '404',
+        errMessage: ErrorDictionary.USERNAME_OR_PASSWORD_INCORRECT,
+      };
+    }
+
+    if (!user.comparePassword(password)) {
+      return {
+        id: '',
+        message: 'User not found',
+        code: '404',
+        errMessage: ErrorDictionary.USERNAME_OR_PASSWORD_INCORRECT,
+      };
+    }
+
+    return {
+      id: get(user, 'id', ''),
+      message: 'User found',
+      code: '200',
+      errMessage: '',
+    };
   }
 }

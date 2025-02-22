@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { compareSync, genSaltSync, hashSync } from 'bcryptjs';
 import { Exclude } from 'class-transformer';
+import { Role } from 'src/enums/role.enum';
+import { UserStatus } from 'src/enums/userStatus';
 import { BaseEntity } from 'src/libs/base/base.entity';
 import { BeforeInsert, BeforeUpdate, Column, Entity, Index } from 'typeorm';
 
@@ -42,10 +44,6 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   about?: string;
 
-  @ApiProperty({ example: 'admin' })
-  @Column({ nullable: true })
-  role?: string;
-
   @ApiProperty({ example: true })
   @Column({ default: false })
   isPublic?: boolean;
@@ -71,6 +69,29 @@ export class User extends BaseEntity {
       this.password = this.hashPassword(this.password);
     }
   }
+
+  @ApiProperty({ example: '2021-08-01T00:00:00.000Z' })
+  @Column({ type: 'timestamp', nullable: true })
+  phoneVerifiedAt: Date;
+
+  @ApiProperty({ example: '2021-08-01T00:00:00.000Z' })
+  @Column({ type: 'timestamp', nullable: true })
+  emailVerifiedAt: Date;
+
+  @ApiProperty({ enum: UserStatus })
+  @Column({
+    type: 'enum',
+    enum: Object.values(UserStatus),
+    default: UserStatus.ACTIVE,
+  })
+  status: UserStatus;
+
+  @Column({
+    type: 'enum',
+    enum: Object.values(Role),
+    default: Role.CLIENT,
+  })
+  role: Role;
 
   hashPassword(password: string) {
     return hashSync(password, genSaltSync(10));

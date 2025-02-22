@@ -10,6 +10,27 @@ import { Observable } from 'rxjs';
 
 export const protobufPackage = 'userProtoService';
 
+export interface GetUserByUserNameRequest {
+  username: string;
+  password: string;
+}
+
+export interface IsTakenEmailRequest {
+  email: string;
+}
+
+export interface IsTakenEmailResponse {
+  isTaken: boolean;
+}
+
+export interface IsTakenPhoneNumberRequest {
+  phoneNumber: string;
+}
+
+export interface IsTakenPhoneNumberResponse {
+  isTaken: boolean;
+}
+
 export interface GetUserRequest {
   id: string;
 }
@@ -70,6 +91,16 @@ export interface UserServiceClient {
   updateUser(request: UpdateUserRequest): Observable<ManageUserResponse>;
 
   createUser(request: CreateUserRequest): Observable<ManageUserResponse>;
+
+  isTakenEmail(request: IsTakenEmailRequest): Observable<IsTakenEmailResponse>;
+
+  isTakenPhoneNumber(
+    request: IsTakenPhoneNumberRequest,
+  ): Observable<IsTakenPhoneNumberResponse>;
+
+  getUserByUserName(
+    request: GetUserByUserNameRequest,
+  ): Observable<ManageUserResponse>;
 }
 
 export interface UserServiceController {
@@ -90,11 +121,39 @@ export interface UserServiceController {
     | Promise<ManageUserResponse>
     | Observable<ManageUserResponse>
     | ManageUserResponse;
+
+  isTakenEmail(
+    request: IsTakenEmailRequest,
+  ):
+    | Promise<IsTakenEmailResponse>
+    | Observable<IsTakenEmailResponse>
+    | IsTakenEmailResponse;
+
+  isTakenPhoneNumber(
+    request: IsTakenPhoneNumberRequest,
+  ):
+    | Promise<IsTakenPhoneNumberResponse>
+    | Observable<IsTakenPhoneNumberResponse>
+    | IsTakenPhoneNumberResponse;
+
+  getUserByUserName(
+    request: GetUserByUserNameRequest,
+  ):
+    | Promise<ManageUserResponse>
+    | Observable<ManageUserResponse>
+    | ManageUserResponse;
 }
 
 export function UserServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ['getUser', 'updateUser', 'createUser'];
+    const grpcMethods: string[] = [
+      'getUser',
+      'updateUser',
+      'createUser',
+      'isTakenEmail',
+      'isTakenPhoneNumber',
+      'getUserByUserName',
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(
         constructor.prototype,
