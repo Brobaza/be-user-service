@@ -11,13 +11,13 @@ verificationPath:
 
 redis:
   host: localhost
-  port: 6379
+  port: 5432
   password: ''
   database: 0
   prefix: 'dailydev'
 
 postgres:
-  host: localhost
+  host: postgres
   port: 5432
   username: postgres
   password: postgres

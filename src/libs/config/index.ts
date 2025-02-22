@@ -4,9 +4,11 @@ import { load } from 'js-yaml';
 
 export interface Configuration {
   port: number;
-  isProduction: boolean;
+  isProd: boolean;
   prefix: string;
   version: string;
+  grpcUrl: string;
+
   frontendUrl: string;
   verificationPath: {
     register: string;
@@ -179,9 +181,10 @@ const servicesSchema = joi.object({
 
 const configSchema = joi.object<Configuration>({
   port: joi.number().required(),
-  isProduction: joi.boolean().required(),
+  isProd: joi.boolean().required(),
   prefix: joi.string().required(),
   version: joi.string().required(),
+  grpcUrl: joi.string().required(),
 
   frontendUrl: joi.string().required(),
   verificationPath: verificationPathSchema.required(),
