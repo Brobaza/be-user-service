@@ -28,7 +28,7 @@ import { UsersService } from './services/user.service';
           username: configService.get<string>('postgres.username'),
           password: configService.get<string>('postgres.password'),
           database: configService.get<string>('postgres.database'),
-          synchronize: !configService.get<boolean>('isProduction'),
+          synchronize: !configService.get<boolean>('isProd'),
           dropSchema: false,
           logging: false,
           logger: 'advanced-console',
@@ -37,6 +37,8 @@ import { UsersService } from './services/user.service';
         };
       },
     }),
+
+    TypeOrmModule.forFeature([User]),
   ],
   controllers: [UsersController],
   providers: [AppLoggerService, UsersService],
