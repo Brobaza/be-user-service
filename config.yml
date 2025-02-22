@@ -21,7 +21,7 @@ postgres:
   port: 5432
   username: postgres
   password: postgres
-  database: postgres
+  database: user_service
 
 agenda:
   uri: mongodb://localhost:27017
@@ -61,11 +61,11 @@ kafka:
 
 services:
   auth:
-    port: 0.0.0.0:5005
+    port: 0.0.0.0:3002
     prefix: /api
     version: '1'
   user:
-    port: 0.0.0.0:5002
+    port: 0.0.0.0:3004
     prefix: /api
     version: '1'
   mail:
