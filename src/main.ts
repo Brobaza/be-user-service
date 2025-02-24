@@ -9,6 +9,7 @@ import helmet from 'helmet';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ReflectionService } from '@grpc/reflection';
 
 async function bootstrap() {
   const appModule = await NestFactory.create(AppModule);
@@ -24,12 +25,15 @@ async function bootstrap() {
 
   appModule.use(cookieParser());
 
-  await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
+  appModule.connectMicroservice<MicroserviceOptions>({
     transport: Transport.GRPC,
     options: {
       protoPath: join(process.cwd(), 'proto/user.service.proto'),
       package: USER_PROTO_SERVICE_PACKAGE_NAME,
       url: configService.get('grpcUrl'),
+      onLoadPackageDefinition: (pkg, server) => {
+        new ReflectionService(pkg).addToServer(server);
+      },
     },
   });
 
