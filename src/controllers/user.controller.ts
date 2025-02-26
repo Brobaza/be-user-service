@@ -123,7 +123,7 @@ export class UsersController implements UserServiceController {
     const { phoneNumber } = request;
     this.logger.log(`>>> check phone number: ${phoneNumber}`);
 
-    const isTaken = await this.usersService.isTakenPhoneNumber(phoneNumber);
+    const isTaken = await this.usersService.isTakenPhone(phoneNumber);
 
     return { isTaken };
   }

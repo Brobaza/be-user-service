@@ -17,7 +17,7 @@ export class User extends BaseEntity {
   photoURL?: string;
 
   @ApiProperty({ example: '+1 416-555-0198' })
-  @Column()
+  @Column({ unique: true })
   phoneNumber: string;
 
   @ApiProperty({ example: 'Canada' })

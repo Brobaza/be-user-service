@@ -1,7 +1,10 @@
+import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { redisStore } from 'cache-manager-redis-yet';
 import { UsersController } from './controllers/user.controller';
+import { CacheDomain } from './domains/cache.domain';
 import { loadConfiguration } from './libs/config';
 import AppLoggerService from './libs/logger';
 import { User } from './models/interfaces/user.entity';
@@ -39,8 +42,24 @@ import { UsersService } from './services/user.service';
     }),
 
     TypeOrmModule.forFeature([User]),
+
+    CacheModule.registerAsync({
+      isGlobal: true,
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        const { host, port, database, password } = configService.get('redis');
+        return {
+          store: await redisStore({
+            database,
+            password,
+            socket: { host, port },
+          }),
+        };
+      },
+    }),
   ],
   controllers: [UsersController],
-  providers: [AppLoggerService, UsersService],
+  providers: [AppLoggerService, UsersService, CacheDomain],
 })
 export class AppModule {}
