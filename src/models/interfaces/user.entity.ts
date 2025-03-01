@@ -4,7 +4,15 @@ import { Exclude } from 'class-transformer';
 import { Role } from 'src/enums/role.enum';
 import { UserStatus } from 'src/enums/userStatus';
 import { BaseEntity } from 'src/libs/base/base.entity';
-import { BeforeInsert, BeforeUpdate, Column, Entity, Index } from 'typeorm';
+import {
+  BeforeInsert,
+  BeforeUpdate,
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+} from 'typeorm';
+import { UserAddress } from './user_address.entity';
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -92,6 +100,9 @@ export class User extends BaseEntity {
     default: Role.CLIENT,
   })
   role: Role;
+
+  @OneToMany(() => UserAddress, (address) => address.user)
+  addresses: UserAddress[];
 
   hashPassword(password: string) {
     return hashSync(password, genSaltSync(10));

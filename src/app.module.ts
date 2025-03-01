@@ -9,6 +9,7 @@ import { loadConfiguration } from './libs/config';
 import AppLoggerService from './libs/logger';
 import { User } from './models/interfaces/user.entity';
 import { UsersService } from './services/user.service';
+import { UserAddress } from './models/interfaces/user_address.entity';
 
 @Module({
   imports: [
@@ -36,12 +37,12 @@ import { UsersService } from './services/user.service';
           logging: false,
           logger: 'advanced-console',
           autoLoadEntities: true,
-          entities: [User],
+          entities: [User, UserAddress],
         };
       },
     }),
 
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, UserAddress]),
 
     CacheModule.registerAsync({
       isGlobal: true,

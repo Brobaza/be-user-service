@@ -21,7 +21,7 @@ postgres:
   port: 5432
   username: postgres
   password: postgres
-  database: auth_service
+  database: user_service
 
 agenda:
   uri: mongodb://localhost:27017
