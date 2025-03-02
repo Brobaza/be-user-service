@@ -10,6 +10,8 @@ import AppLoggerService from './libs/logger';
 import { User } from './models/interfaces/user.entity';
 import { UsersService } from './services/user.service';
 import { UserAddress } from './models/interfaces/user_address.entity';
+import { UserAddressService } from './services/address.service';
+import { TransactionDomain } from './domains/transaction.domain';
 
 @Module({
   imports: [
@@ -61,6 +63,12 @@ import { UserAddress } from './models/interfaces/user_address.entity';
     }),
   ],
   controllers: [UsersController],
-  providers: [AppLoggerService, UsersService, CacheDomain],
+  providers: [
+    AppLoggerService,
+    UsersService,
+    CacheDomain,
+    UserAddressService,
+    TransactionDomain,
+  ],
 })
 export class AppModule {}

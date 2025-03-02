@@ -1,17 +1,29 @@
 import { Controller, Logger } from '@nestjs/common';
-import { get, isEmpty } from 'lodash';
+import { get, isEmpty, map } from 'lodash';
+import { Observable } from 'rxjs';
 import { ErrorDictionary } from 'src/enums/error.dictionary';
 import { EGender } from 'src/enums/gender';
 import {
+  CreateAddressRequest,
   CreateUserRequest,
+  DeleteAddressRequest,
+  GetAddressesRequest,
+  GetAddressesResponse,
+  GetAddressRequest,
+  GetAddressResponse,
+  GetDefaultAddressRequest,
+  GetDefaultAddressResponse,
   GetUserByUserNameRequest,
   GetUserRequest,
   GetUserResponse,
+  ManageAddressResponse,
   ManageUserResponse,
+  UpdateAddressRequest,
   UpdateUserRequest,
   UserServiceController,
   UserServiceControllerMethods,
 } from 'src/gen/user.service';
+import { UserAddressService } from 'src/services/address.service';
 import { UsersService } from 'src/services/user.service';
 
 @Controller()
@@ -19,7 +31,175 @@ import { UsersService } from 'src/services/user.service';
 export class UsersController implements UserServiceController {
   logger = new Logger(UsersController.name);
 
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userAddressService: UserAddressService,
+  ) {}
+
+  async getAddresses(
+    request: GetAddressesRequest,
+  ): Promise<GetAddressesResponse> {
+    try {
+      const resp = await this.userAddressService.findAll(request);
+
+      return {
+        addresses: map(resp.items, (item) =>
+          this.userAddressService.parseToProtocModel(item),
+        ),
+        total: get(resp, 'total', 0),
+        metadata: {
+          id: '',
+          message: '',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (err) {
+      this.logger.error(err);
+      this.logger.error(JSON.stringify(err));
+
+      return {
+        addresses: [],
+        total: 0,
+        metadata: {
+          id: '',
+          message: '',
+          errMessage: '',
+          code: '500',
+        },
+      };
+    }
+  }
+
+  async getAddress(request: GetAddressRequest): Promise<GetAddressResponse> {
+    const { id: addressId, userId } = request;
+
+    try {
+      const resp = await this.userAddressService.validate({
+        addressId,
+        userId,
+      });
+
+      return {
+        address: this.userAddressService.parseToProtocModel(resp),
+        metadata: {
+          id: '',
+          message: '',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (err) {
+      this.logger.error(err);
+      this.logger.error(JSON.stringify(err));
+
+      return {
+        address: this.userAddressService.getDefaultProtocModel(),
+        metadata: {
+          id: '',
+          message: JSON.stringify(err),
+          code: '500',
+          errMessage: err?.message || '',
+        },
+      };
+    }
+  }
+
+  async deleteAddress(
+    request: DeleteAddressRequest,
+  ): Promise<ManageAddressResponse> {
+    const { id: addressId, userId } = request;
+    try {
+      await this.userAddressService.validate({ addressId, userId });
+
+      await this.userAddressService.softDelete({ id: addressId });
+
+      return {
+        id: addressId,
+        metadata: {
+          id: '',
+          message: 'Address deleted successfully',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (err) {
+      this.logger.error(err);
+      this.logger.error(JSON.stringify(err));
+
+      return {
+        id: '',
+        metadata: {
+          id: '',
+          message: JSON.stringify(err),
+          code: '500',
+          errMessage: err?.message || '',
+        },
+      };
+    }
+  }
+
+  async createAddress(
+    request: CreateAddressRequest,
+  ): Promise<ManageAddressResponse> {
+    try {
+      const { id } = await this.userAddressService.createUserAddress(request);
+
+      return {
+        id,
+        metadata: {
+          id: '',
+          message: 'Address created successfully',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (err) {
+      this.logger.error(err);
+      this.logger.error(JSON.stringify(err));
+
+      return {
+        id: '',
+        metadata: {
+          id: '',
+          message: JSON.stringify(err),
+          code: '500',
+          errMessage: err?.message || '',
+        },
+      };
+    }
+  }
+
+  async updateAddress(
+    request: UpdateAddressRequest,
+  ): Promise<ManageAddressResponse> {
+    try {
+      const { id } = await this.userAddressService.updateUserAddress(request);
+
+      return {
+        id,
+        metadata: {
+          id: '',
+          message: 'Address updated successfully',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (err) {
+      this.logger.error(err);
+      this.logger.error(JSON.stringify(err));
+
+      return {
+        id: '',
+        metadata: {
+          id: '',
+          message: JSON.stringify(err),
+          code: '500',
+          errMessage: err?.message || '',
+        },
+      };
+    }
+  }
 
   async getUser(request: GetUserRequest): Promise<GetUserResponse> {
     const { id } = request;
@@ -160,5 +340,36 @@ export class UsersController implements UserServiceController {
       code: '200',
       errMessage: '',
     };
+  }
+
+  async getDefaultAddress(
+    request: GetDefaultAddressRequest,
+  ): Promise<GetDefaultAddressResponse> {
+    const { userId } = request;
+    this.logger.log(`>>> get default address: ${userId}`);
+
+    try {
+      const resp = await this.userAddressService.getDefaultAddress(userId);
+
+      return {
+        address: this.userAddressService.parseToProtocModel(resp),
+        metadata: {
+          id: '',
+          message: 'Default address found',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (err) {
+      return {
+        address: this.userAddressService.getDefaultProtocModel(),
+        metadata: {
+          id: '',
+          message: 'Default address not found',
+          code: '404',
+          errMessage: err.message,
+        },
+      };
+    }
   }
 }

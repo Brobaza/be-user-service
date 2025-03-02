@@ -7,6 +7,7 @@ import { UserStatus } from 'src/enums/userStatus';
 import { BaseService } from 'src/libs/base/base.service';
 import { User } from 'src/models/interfaces/user.entity';
 import { Repository } from 'typeorm';
+import { UserAddressService } from './address.service';
 
 @Injectable()
 export class UsersService extends BaseService<User> implements OnModuleInit {
@@ -15,6 +16,7 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly cacheDomain: CacheDomain,
+    private readonly userAddressService: UserAddressService,
   ) {
     super(userRepo);
   }

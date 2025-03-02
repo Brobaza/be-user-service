@@ -10,6 +10,73 @@ import { Observable } from 'rxjs';
 
 export const protobufPackage = 'userProtoService';
 
+export interface DeleteAddressRequest {
+  id: string;
+  userId: string;
+}
+
+export interface GetAddressRequest {
+  id: string;
+  userId: string;
+}
+
+export interface GetDefaultAddressRequest {
+  userId: string;
+}
+
+export interface GetDefaultAddressResponse {
+  address: Address | undefined;
+  metadata: ManageUserResponse | undefined;
+}
+
+export interface GetAddressResponse {
+  address: Address | undefined;
+  metadata: ManageUserResponse | undefined;
+}
+
+export interface GetAddressesRequest {
+  userId: string;
+  limit: number;
+  page: number;
+}
+
+export interface Address {
+  id: string;
+  isDefault: boolean;
+  userId: string;
+  title: string;
+  address: string;
+  type: string;
+}
+
+export interface GetAddressesResponse {
+  addresses: Address[];
+  total: number;
+  metadata: ManageUserResponse | undefined;
+}
+
+export interface CreateAddressRequest {
+  userId: string;
+  title: string;
+  address: string;
+  type: string;
+  isDefault: boolean;
+}
+
+export interface ManageAddressResponse {
+  id: string;
+  metadata: ManageUserResponse | undefined;
+}
+
+export interface UpdateAddressRequest {
+  id: string;
+  userId: string;
+  title: string;
+  address: string;
+  type: string;
+  isDefault: boolean;
+}
+
 export interface GetUserByUserNameRequest {
   username: string;
   password: string;
@@ -101,6 +168,28 @@ export interface UserServiceClient {
   getUserByUserName(
     request: GetUserByUserNameRequest,
   ): Observable<ManageUserResponse>;
+
+  /** address */
+
+  getAddresses(request: GetAddressesRequest): Observable<GetAddressesResponse>;
+
+  createAddress(
+    request: CreateAddressRequest,
+  ): Observable<ManageAddressResponse>;
+
+  updateAddress(
+    request: UpdateAddressRequest,
+  ): Observable<ManageAddressResponse>;
+
+  deleteAddress(
+    request: DeleteAddressRequest,
+  ): Observable<ManageAddressResponse>;
+
+  getAddress(request: GetAddressRequest): Observable<GetAddressResponse>;
+
+  getDefaultAddress(
+    request: GetDefaultAddressRequest,
+  ): Observable<GetDefaultAddressResponse>;
 }
 
 export interface UserServiceController {
@@ -142,6 +231,50 @@ export interface UserServiceController {
     | Promise<ManageUserResponse>
     | Observable<ManageUserResponse>
     | ManageUserResponse;
+
+  /** address */
+
+  getAddresses(
+    request: GetAddressesRequest,
+  ):
+    | Promise<GetAddressesResponse>
+    | Observable<GetAddressesResponse>
+    | GetAddressesResponse;
+
+  createAddress(
+    request: CreateAddressRequest,
+  ):
+    | Promise<ManageAddressResponse>
+    | Observable<ManageAddressResponse>
+    | ManageAddressResponse;
+
+  updateAddress(
+    request: UpdateAddressRequest,
+  ):
+    | Promise<ManageAddressResponse>
+    | Observable<ManageAddressResponse>
+    | ManageAddressResponse;
+
+  deleteAddress(
+    request: DeleteAddressRequest,
+  ):
+    | Promise<ManageAddressResponse>
+    | Observable<ManageAddressResponse>
+    | ManageAddressResponse;
+
+  getAddress(
+    request: GetAddressRequest,
+  ):
+    | Promise<GetAddressResponse>
+    | Observable<GetAddressResponse>
+    | GetAddressResponse;
+
+  getDefaultAddress(
+    request: GetDefaultAddressRequest,
+  ):
+    | Promise<GetDefaultAddressResponse>
+    | Observable<GetDefaultAddressResponse>
+    | GetDefaultAddressResponse;
 }
 
 export function UserServiceControllerMethods() {
@@ -153,6 +286,12 @@ export function UserServiceControllerMethods() {
       'isTakenEmail',
       'isTakenPhoneNumber',
       'getUserByUserName',
+      'getAddresses',
+      'createAddress',
+      'updateAddress',
+      'deleteAddress',
+      'getAddress',
+      'getDefaultAddress',
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(
