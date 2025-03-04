@@ -16,7 +16,6 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly cacheDomain: CacheDomain,
-    private readonly userAddressService: UserAddressService,
   ) {
     super(userRepo);
   }
