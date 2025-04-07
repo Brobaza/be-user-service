@@ -8,7 +8,7 @@ import { join } from 'path';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import * as cookieParser from 'cookie-parser';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { ReflectionService } from '@grpc/reflection';
 
 async function bootstrap() {
@@ -55,6 +55,13 @@ async function bootstrap() {
 
   await appModule.startAllMicroservices();
 
-  await appModule.listen(configService.get<number>('port'));
+  const port = configService.get<number>('port');
+
+  await appModule.listen(port, () => {
+    const logger: Logger = new Logger('Server connection');
+    logger.log(
+      `👤User service has started successfully running on port ${port}`,
+    );
+  });
 }
 bootstrap();

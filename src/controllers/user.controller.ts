@@ -1,6 +1,5 @@
 import { Controller, Logger } from '@nestjs/common';
-import { get, isEmpty, map } from 'lodash';
-import { Observable } from 'rxjs';
+import { get, isEmpty, map, filter } from 'lodash';
 import { ErrorDictionary } from 'src/enums/error.dictionary';
 import { EGender } from 'src/enums/gender';
 import {
@@ -11,6 +10,8 @@ import {
   GetAddressesResponse,
   GetAddressRequest,
   GetAddressResponse,
+  GetAllRelatedFriendRequest,
+  GetAllRelatedFriendResponse,
   GetDefaultAddressRequest,
   GetDefaultAddressResponse,
   GetUserByUserNameRequest,
@@ -23,8 +24,11 @@ import {
   UserServiceController,
   UserServiceControllerMethods,
 } from 'src/gen/user.service';
+import { User } from 'src/models/interfaces/user.entity';
 import { UserAddressService } from 'src/services/address.service';
 import { UsersService } from 'src/services/user.service';
+import { compactInObject } from 'src/utils/helpers';
+import { DeepPartial } from 'typeorm';
 
 @Controller()
 @UserServiceControllerMethods()
@@ -35,6 +39,45 @@ export class UsersController implements UserServiceController {
     private readonly usersService: UsersService,
     private readonly userAddressService: UserAddressService,
   ) {}
+
+  async getAllRelatedFriend(
+    request: GetAllRelatedFriendRequest,
+  ): Promise<GetAllRelatedFriendResponse> {
+    const { userId } = request;
+    this.logger.log(`>>> get all related friend: ${userId}`);
+
+    try {
+      const { items } = await this.usersService.findAndCount({
+        skip: 0,
+        take: 100,
+      });
+
+      return {
+        friends: map(
+          filter(items, (i) => i.id !== userId),
+          (item) => this.usersService.parseToProtocBufUser(item),
+        ),
+        metadata: {
+          id: '',
+          message: 'Users found',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (error) {
+      this.logger.error(error);
+
+      return {
+        friends: [],
+        metadata: {
+          id: '',
+          code: JSON.stringify(get(error, 'response.status', 500)),
+          message: get(error, 'response.code', 'Internal Server Error'),
+          errMessage: error.message,
+        },
+      };
+    }
+  }
 
   async getAddresses(
     request: GetAddressesRequest,
@@ -54,18 +97,17 @@ export class UsersController implements UserServiceController {
           errMessage: '',
         },
       };
-    } catch (err) {
-      this.logger.error(err);
-      this.logger.error(JSON.stringify(err));
+    } catch (error) {
+      this.logger.error(error);
 
       return {
         addresses: [],
         total: 0,
         metadata: {
           id: '',
-          message: '',
-          errMessage: '',
-          code: '500',
+          code: JSON.stringify(get(error, 'response.status', 500)),
+          message: get(error, 'response.code', 'Internal Server Error'),
+          errMessage: error.message,
         },
       };
     }
@@ -89,17 +131,16 @@ export class UsersController implements UserServiceController {
           errMessage: '',
         },
       };
-    } catch (err) {
-      this.logger.error(err);
-      this.logger.error(JSON.stringify(err));
+    } catch (error) {
+      this.logger.error(error);
 
       return {
         address: this.userAddressService.getDefaultProtocModel(),
         metadata: {
           id: '',
-          message: JSON.stringify(err),
-          code: '500',
-          errMessage: err?.message || '',
+          code: JSON.stringify(get(error, 'response.status', 500)),
+          message: get(error, 'response.code', 'Internal Server Error'),
+          errMessage: error.message,
         },
       };
     }
@@ -123,17 +164,16 @@ export class UsersController implements UserServiceController {
           errMessage: '',
         },
       };
-    } catch (err) {
-      this.logger.error(err);
-      this.logger.error(JSON.stringify(err));
+    } catch (error) {
+      this.logger.error(error);
 
       return {
         id: '',
         metadata: {
           id: '',
-          message: JSON.stringify(err),
-          code: '500',
-          errMessage: err?.message || '',
+          code: JSON.stringify(get(error, 'response.status', 500)),
+          message: get(error, 'response.code', 'Internal Server Error'),
+          errMessage: error.message,
         },
       };
     }
@@ -154,17 +194,16 @@ export class UsersController implements UserServiceController {
           errMessage: '',
         },
       };
-    } catch (err) {
-      this.logger.error(err);
-      this.logger.error(JSON.stringify(err));
+    } catch (error) {
+      this.logger.error(error);
 
       return {
         id: '',
         metadata: {
           id: '',
-          message: JSON.stringify(err),
-          code: '500',
-          errMessage: err?.message || '',
+          code: JSON.stringify(get(error, 'response.status', 500)),
+          message: get(error, 'response.code', 'Internal Server Error'),
+          errMessage: error.message,
         },
       };
     }
@@ -185,17 +224,16 @@ export class UsersController implements UserServiceController {
           errMessage: '',
         },
       };
-    } catch (err) {
-      this.logger.error(err);
-      this.logger.error(JSON.stringify(err));
+    } catch (error) {
+      this.logger.error(error);
 
       return {
         id: '',
         metadata: {
           id: '',
-          message: JSON.stringify(err),
-          code: '500',
-          errMessage: err?.message || '',
+          code: JSON.stringify(get(error, 'response.status', 500)),
+          message: get(error, 'response.code', 'Internal Server Error'),
+          errMessage: error.message,
         },
       };
     }
@@ -208,8 +246,8 @@ export class UsersController implements UserServiceController {
 
     return {
       id: get(user, 'id', ''),
-      displayName: get(user, 'displayName', ''),
-      photoUrl: get(user, 'photoUrl', ''),
+      name: get(user, 'name', ''),
+      avatar: get(user, 'avatar', ''),
       phoneNumber: get(user, 'phoneNumber', ''),
       country: get(user, 'country', ''),
       address: get(user, 'address', ''),
@@ -221,20 +259,22 @@ export class UsersController implements UserServiceController {
       isPublic: get(user, 'isPublic', false),
       email: get(user, 'email', ''),
       gender: get(user, 'gender', EGender.UNKNOWN),
+      location: get(user, 'location', ''),
     };
   }
 
   async createUser(request: CreateUserRequest): Promise<ManageUserResponse> {
-    const { displayName, phoneNumber, email, gender, password } = request;
-    this.logger.log(`>>> create user: ${displayName}`);
+    const { name, phoneNumber, email, gender, password, location } = request;
+    this.logger.log(`>>> create user: ${name}`);
 
     try {
-      const user = await this.usersService.create({
-        displayName,
+      const user = await this.usersService.createUser({
+        name,
         phoneNumber,
         email,
         gender,
         password,
+        location,
       });
 
       return {
@@ -243,12 +283,14 @@ export class UsersController implements UserServiceController {
         code: '200',
         errMessage: '',
       };
-    } catch (err) {
+    } catch (error) {
+      this.logger.error(error);
+
       return {
         id: '',
-        message: 'Failed to create user',
-        code: '400',
-        errMessage: err.message,
+        code: JSON.stringify(get(error, 'response.status', 500)),
+        message: get(error, 'response.code', 'Internal Server Error'),
+        errMessage: error.message,
       };
     }
   }
@@ -268,7 +310,10 @@ export class UsersController implements UserServiceController {
     }
 
     try {
-      await this.usersService.updateById(id, request as any);
+      await this.usersService.updateById(
+        id,
+        compactInObject<DeepPartial<User>>(request),
+      );
 
       return {
         id: request.id,
@@ -312,8 +357,6 @@ export class UsersController implements UserServiceController {
     request: GetUserByUserNameRequest,
   ): Promise<ManageUserResponse> {
     const { username, password } = request;
-    this.logger.log(`>>> get user by username: ${username}`);
-
     const user = await this.usersService.getUserByUsername(username);
 
     if (isEmpty(user)) {

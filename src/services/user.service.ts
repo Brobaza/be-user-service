@@ -1,13 +1,16 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { get } from 'lodash';
 import { CacheDomain } from 'src/domains/cache.domain';
+import { EGender } from 'src/enums/gender';
 import { RedisKey } from 'src/enums/redis-key.enum';
 import { Role } from 'src/enums/role.enum';
 import { UserStatus } from 'src/enums/userStatus';
+import { CreateUserRequest } from 'src/gen/user.service';
 import { BaseService } from 'src/libs/base/base.service';
 import { User } from 'src/models/interfaces/user.entity';
+import { avatarUrlDemo } from 'src/utils/constants';
 import { Repository } from 'typeorm';
-import { UserAddressService } from './address.service';
 
 @Injectable()
 export class UsersService extends BaseService<User> implements OnModuleInit {
@@ -31,8 +34,8 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
     if (!exists) {
       await this.userRepo.save(
         this.userRepo.create({
-          displayName: 'Admin',
-          photoURL:
+          name: 'Admin',
+          avatar:
             'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp',
           email: '123nguyenbahoangkien123@gmail.com',
           phoneNumber: '0946380928',
@@ -152,7 +155,7 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
 
   async getUserByUsername(username: string) {
     if (await this.isTakenEmail(username)) {
-      const user = await this.userRepo.findOne({
+      const user = await this.findOne({
         where: { email: username },
       });
 
@@ -160,7 +163,7 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
     }
 
     if (await this.isTakenPhone(username)) {
-      const user = await this.userRepo.findOne({
+      const user = await this.findOne({
         where: { phoneNumber: username },
       });
 
@@ -168,5 +171,52 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
     }
 
     return null;
+  }
+
+  async createUser({
+    name,
+    phoneNumber,
+    email,
+    gender,
+    password,
+    location,
+  }: CreateUserRequest) {
+    const randomAvatarIndex = Math.floor(Math.random() * avatarUrlDemo.length);
+
+    const user = await this.create({
+      name,
+      phoneNumber,
+      email,
+      gender,
+      password,
+      avatar: avatarUrlDemo[randomAvatarIndex],
+      location,
+      status: UserStatus.ACTIVE,
+    });
+
+    await this.setTakenEmail(email);
+    await this.setTakenPhone(phoneNumber);
+
+    return user;
+  }
+
+  parseToProtocBufUser(user: any) {
+    return {
+      id: get(user, 'id', ''),
+      name: get(user, 'name', ''),
+      avatar: get(user, 'avatar', ''),
+      phoneNumber: get(user, 'phoneNumber', ''),
+      country: get(user, 'country', ''),
+      address: get(user, 'address', ''),
+      state: get(user, 'state', ''),
+      city: get(user, 'city', ''),
+      zipCode: get(user, 'zipCode', ''),
+      about: get(user, 'about', ''),
+      role: get(user, 'role', ''),
+      isPublic: get(user, 'isPublic', false),
+      email: get(user, 'email', ''),
+      gender: get(user, 'gender', EGender.UNKNOWN),
+      location: get(user, 'location', ''),
+    };
   }
 }

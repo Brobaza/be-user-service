@@ -18,11 +18,11 @@ import { UserAddress } from './user_address.entity';
 export class User extends BaseEntity {
   @ApiProperty({ example: 'Jaydon Frankie' })
   @Column()
-  displayName: string;
+  name: string;
 
   @ApiProperty({ example: 'https://example.com/avatar.png' })
   @Column({ nullable: true })
-  photoURL?: string;
+  avatar?: string;
 
   @ApiProperty({ example: '+1 416-555-0198' })
   @Column({ unique: true })
@@ -47,6 +47,10 @@ export class User extends BaseEntity {
   @ApiProperty({ example: '94116' })
   @Column({ nullable: true })
   zipCode?: string;
+
+  @ApiProperty({ example: 'vn' })
+  @Column({ nullable: true })
+  location?: string;
 
   @ApiProperty({ example: 'Short bio about the user' })
   @Column({ nullable: true })
