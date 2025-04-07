@@ -2,7 +2,7 @@ services:
   be-user-service:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.debug
     container_name: be-user-service
     restart: unless-stopped
     ports:
