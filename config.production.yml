@@ -17,7 +17,7 @@ redis:
   prefix: 'dailydev'
 
 postgres:
-  host: 103.188.82.199
+  host: postgres
   port: 5432
   username: root
   password: Kien123
@@ -29,7 +29,7 @@ agenda:
   database: agenda
 
 mongo:
-  uri: mongodb://103.188.82.199:27017
+  uri: mongodb://mongo:27017
   username: root
   password: Kien123
   port: 27017
@@ -52,7 +52,7 @@ jwt:
 
 kafka:
   brokers:
-    - localhost:9092
+    - kafka:9092
   groupId: chat-notification-service
   topics:
     - name: topic1
