@@ -43,7 +43,7 @@ COPY --from=build /app/yarn.lock /app/
 COPY --from=build /app/dist/ /app/dist/
 COPY --from=build /app/config.yml /app/config.yml
 COPY --from=build /app/config.production.yml /app/config.yml
-COPY --from=build /app/generated/ /app/generated/
+COPY --from=build /app/proto/ /app/proto/
 
 RUN yarn install --production --frozen-lockfile
 
