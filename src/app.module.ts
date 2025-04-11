@@ -12,6 +12,8 @@ import { UsersService } from './services/user.service';
 import { UserAddress } from './models/interfaces/user_address.entity';
 import { UserAddressService } from './services/address.service';
 import { TransactionDomain } from './domains/transaction.domain';
+import { ConsumerService } from './queue/base/consumer.base-queue';
+import { ProducerService } from './queue/base/producer.base-queue';
 
 @Module({
   imports: [
@@ -64,11 +66,20 @@ import { TransactionDomain } from './domains/transaction.domain';
   ],
   controllers: [UsersController],
   providers: [
+    // * config
     AppLoggerService,
+
+    // * services
     UsersService,
-    CacheDomain,
     UserAddressService,
+
+    // * domains
     TransactionDomain,
+    CacheDomain,
+
+    // * queues
+    ConsumerService,
+    ProducerService,
   ],
 })
 export class AppModule {}

@@ -3,12 +3,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { get } from 'lodash';
 import { CacheDomain } from 'src/domains/cache.domain';
 import { EGender } from 'src/enums/gender';
+import { QueueTopic } from 'src/enums/queue-topic.enum';
 import { RedisKey } from 'src/enums/redis-key.enum';
 import { Role } from 'src/enums/role.enum';
 import { UserStatus } from 'src/enums/userStatus';
 import { CreateUserRequest } from 'src/gen/user.service';
 import { BaseService } from 'src/libs/base/base.service';
 import { User } from 'src/models/interfaces/user.entity';
+import { ProducerService } from 'src/queue/base/producer.base-queue';
 import { avatarUrlDemo } from 'src/utils/constants';
 import { Repository } from 'typeorm';
 
@@ -19,6 +21,7 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly cacheDomain: CacheDomain,
+    private readonly producerService: ProducerService,
   ) {
     super(userRepo);
   }
@@ -182,6 +185,7 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
     location,
   }: CreateUserRequest) {
     const randomAvatarIndex = Math.floor(Math.random() * avatarUrlDemo.length);
+    const avatar = avatarUrlDemo[randomAvatarIndex];
 
     const user = await this.create({
       name,
@@ -189,13 +193,26 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
       email,
       gender,
       password,
-      avatar: avatarUrlDemo[randomAvatarIndex],
+      avatar,
       location,
       status: UserStatus.ACTIVE,
     });
 
     await this.setTakenEmail(email);
     await this.setTakenPhone(phoneNumber);
+
+    await this.producerService.produce({
+      topic: QueueTopic.SYNC_STREAM_USER,
+      messages: [
+        {
+          value: JSON.stringify({
+            userId: user.id,
+            name: name,
+            avatar: avatar,
+          }),
+        },
+      ],
+    });
 
     return user;
   }
