@@ -10,7 +10,7 @@ verificationPath:
   resetPassword: /reset-password
 
 redis:
-  host: 103.188.82.199
+  host: redis
   port: 6379
   password: ''
   database: 0
