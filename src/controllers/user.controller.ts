@@ -1,5 +1,5 @@
 import { Controller, Logger } from '@nestjs/common';
-import { get, isEmpty, map, filter } from 'lodash';
+import { filter, get, isEmpty, map } from 'lodash';
 import { ErrorDictionary } from 'src/enums/error.dictionary';
 import { EGender } from 'src/enums/gender';
 import {
@@ -27,6 +27,7 @@ import {
 import { User } from 'src/models/interfaces/user.entity';
 import { UserAddressService } from 'src/services/address.service';
 import { UsersService } from 'src/services/user.service';
+import { convertToUserProto } from 'src/utils/converters';
 import { compactInObject } from 'src/utils/helpers';
 import { DeepPartial } from 'typeorm';
 
@@ -50,12 +51,13 @@ export class UsersController implements UserServiceController {
       const { items } = await this.usersService.findAndCount({
         skip: 0,
         take: 100,
+        relations: ['about'],
       });
 
       return {
         friends: map(
           filter(items, (i) => i.id !== userId),
-          (item) => this.usersService.parseToProtocBufUser(item),
+          (item) => convertToUserProto(item),
         ),
         metadata: {
           id: '',
@@ -242,25 +244,9 @@ export class UsersController implements UserServiceController {
   async getUser(request: GetUserRequest): Promise<GetUserResponse> {
     const { id } = request;
     this.logger.log(`>>> get user: ${id}`);
-    const user = await this.usersService.findById(id);
+    const user = await this.usersService.findById(id, 'about');
 
-    return {
-      id: get(user, 'id', ''),
-      name: get(user, 'name', ''),
-      avatar: get(user, 'avatar', ''),
-      phoneNumber: get(user, 'phoneNumber', ''),
-      country: get(user, 'country', ''),
-      address: get(user, 'address', ''),
-      state: get(user, 'state', ''),
-      city: get(user, 'city', ''),
-      zipCode: get(user, 'zipCode', ''),
-      about: get(user, 'about', ''),
-      role: get(user, 'role', ''),
-      isPublic: get(user, 'isPublic', false),
-      email: get(user, 'email', ''),
-      gender: get(user, 'gender', EGender.UNKNOWN),
-      location: get(user, 'location', ''),
-    };
+    return convertToUserProto(user);
   }
 
   async createUser(request: CreateUserRequest): Promise<ManageUserResponse> {
@@ -310,9 +296,9 @@ export class UsersController implements UserServiceController {
     }
 
     try {
-      await this.usersService.updateById(
+      await this.usersService.updateUser(
         id,
-        compactInObject<DeepPartial<User>>(request),
+        compactInObject<UpdateUserRequest>(request),
       );
 
       return {

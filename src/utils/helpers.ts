@@ -120,6 +120,11 @@ export const compactInObject = <T>(dto: any): T => {
     if (dto[key] !== '' && dto[key] !== null && dto[key] !== undefined) {
       object[key] = dto[key];
     }
+    if (typeof dto[key] === 'object') {
+      if (dto[key] !== null) {
+        object[key] = compactInObject(dto[key]);
+      }
+    }
   });
 
   return object as T;

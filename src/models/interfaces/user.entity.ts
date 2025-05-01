@@ -11,8 +11,10 @@ import {
   Entity,
   Index,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { UserAddress } from './user_address.entity';
+import { UserAbout } from './user.about';
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -28,33 +30,16 @@ export class User extends BaseEntity {
   @Column({ unique: true })
   phoneNumber: string;
 
-  @ApiProperty({ example: 'Canada' })
-  @Column({ nullable: true })
-  country?: string;
-
   @ApiProperty({ example: '90210 Broadway Blvd' })
   @Column({ nullable: true })
   address?: string;
-
-  @ApiProperty({ example: 'California' })
-  @Column({ nullable: true })
-  state?: string;
-
-  @ApiProperty({ example: 'San Francisco' })
-  @Column({ nullable: true })
-  city?: string;
-
-  @ApiProperty({ example: '94116' })
-  @Column({ nullable: true })
-  zipCode?: string;
 
   @ApiProperty({ example: 'vn' })
   @Column({ nullable: true })
   location?: string;
 
-  @ApiProperty({ example: 'Short bio about the user' })
-  @Column({ nullable: true })
-  about?: string;
+  @OneToOne(() => UserAbout, (userAbout) => userAbout.user)
+  about: UserAbout;
 
   @ApiProperty({ example: true })
   @Column({ default: false })

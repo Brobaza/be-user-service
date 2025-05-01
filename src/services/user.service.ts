@@ -7,12 +7,13 @@ import { QueueTopic } from 'src/enums/queue-topic.enum';
 import { RedisKey } from 'src/enums/redis-key.enum';
 import { Role } from 'src/enums/role.enum';
 import { UserStatus } from 'src/enums/userStatus';
-import { CreateUserRequest } from 'src/gen/user.service';
+import { CreateUserRequest, UpdateUserRequest } from 'src/gen/user.service';
 import { BaseService } from 'src/libs/base/base.service';
 import { User } from 'src/models/interfaces/user.entity';
 import { ProducerService } from 'src/queue/base/producer.base-queue';
 import { avatarUrlDemo } from 'src/utils/constants';
 import { Repository } from 'typeorm';
+import { UserAboutService } from './user_about.service';
 
 @Injectable()
 export class UsersService extends BaseService<User> implements OnModuleInit {
@@ -22,6 +23,7 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly cacheDomain: CacheDomain,
     private readonly producerService: ProducerService,
+    private readonly userAboutService: UserAboutService,
   ) {
     super(userRepo);
   }
@@ -42,12 +44,21 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
             'https://api-dev-minimal-v6.vercel.app/assets/images/avatar/avatar-25.webp',
           email: '123nguyenbahoangkien123@gmail.com',
           phoneNumber: '0946380928',
-          country: 'Vietnam',
           address: '123 Nguyen Ba Hoang Kien',
-          state: 'HCM',
-          city: 'HCM',
-          zipCode: '700000',
-          about: 'Admin account',
+          about: {
+            workRole: 'Admin manager',
+            company: 'Gleichner, Mueller and Tromp',
+            school: 'Nikolaus - Leuschke',
+            country: 'Vietnam',
+            totalFollowers: 1947,
+            totalFollowing: 9124,
+            quote:
+              'Tart I love sugar plum I love oat cake. Sweet roll caramels I love jujubes. Topping cake wafer..',
+            facebook: 'https://www.facebook.com/caitlyn.kerluke',
+            twitter: 'https://www.instagram.com/caitlyn.kerluke',
+            linkedin: 'https://www.linkedin.com/in/caitlyn.kerluke',
+            instagram: 'https://www.twitter.com/caitlyn.kerluke',
+          },
           isPublic: true,
           gender: '',
           status: UserStatus.ACTIVE,
@@ -197,6 +208,7 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
       location,
       status: UserStatus.ACTIVE,
     });
+    const userAbout = await this.userAboutService.createUserAbout(user.id);
 
     await this.setTakenEmail(email);
     await this.setTakenPhone(phoneNumber);
@@ -214,7 +226,22 @@ export class UsersService extends BaseService<User> implements OnModuleInit {
       ],
     });
 
-    return user;
+    return {
+      ...user,
+      about: userAbout,
+    };
+  }
+
+  async updateUser(id: string, request: UpdateUserRequest) {
+    const userAboutRequest = get(request, 'about', {});
+
+    await this.updateById(id, {
+      ...request,
+      status: get(request, 'status', UserStatus.ACTIVE) as UserStatus,
+      about: {
+        ...userAboutRequest,
+      },
+    });
   }
 
   parseToProtocBufUser(user: any) {

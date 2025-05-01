@@ -14,6 +14,8 @@ import { UserAddressService } from './services/address.service';
 import { TransactionDomain } from './domains/transaction.domain';
 import { ConsumerService } from './queue/base/consumer.base-queue';
 import { ProducerService } from './queue/base/producer.base-queue';
+import { UserAbout } from './models/interfaces/user.about';
+import { UserAboutService } from './services/user_about.service';
 
 @Module({
   imports: [
@@ -41,12 +43,12 @@ import { ProducerService } from './queue/base/producer.base-queue';
           logging: false,
           logger: 'advanced-console',
           autoLoadEntities: true,
-          entities: [User, UserAddress],
+          entities: [User, UserAddress, UserAbout],
         };
       },
     }),
 
-    TypeOrmModule.forFeature([User, UserAddress]),
+    TypeOrmModule.forFeature([User, UserAddress, UserAbout]),
 
     CacheModule.registerAsync({
       isGlobal: true,
@@ -72,6 +74,7 @@ import { ProducerService } from './queue/base/producer.base-queue';
     // * services
     UsersService,
     UserAddressService,
+    UserAboutService,
 
     // * domains
     TransactionDomain,
