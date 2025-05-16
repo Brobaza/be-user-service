@@ -130,4 +130,11 @@ export enum ErrorDictionary {
 
   // * Daily Jackpot
   DAILY_JACKPOT_NOTFOUND = 'DailyJackpotNotFound',
+
+  // * Friend exist
+  FRIEND_REQUEST_EXIST = 'FriendRequestExist',
+  FRIEND_REQUEST_NOT_FOUND = 'FriendRequestNotFound',
+  USER_HAVE_NO_RIGHT = 'UserHaveNoRight',
+  FRIEND_REQUEST_ACCEPTED = 'FriendRequestAccepted',
+  FRIEND_REQUEST_PENDING = 'FriendRequestPending',
 }

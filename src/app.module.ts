@@ -16,6 +16,8 @@ import { ConsumerService } from './queue/base/consumer.base-queue';
 import { ProducerService } from './queue/base/producer.base-queue';
 import { UserAbout } from './models/interfaces/user.about';
 import { UserAboutService } from './services/user_about.service';
+import { FriendRequest } from './models/interfaces/friend_requests.entity';
+import { FriendRequestService } from './services/friend_request.service';
 
 @Module({
   imports: [
@@ -43,12 +45,12 @@ import { UserAboutService } from './services/user_about.service';
           logging: false,
           logger: 'advanced-console',
           autoLoadEntities: true,
-          entities: [User, UserAddress, UserAbout],
+          entities: [User, UserAddress, UserAbout, FriendRequest],
         };
       },
     }),
 
-    TypeOrmModule.forFeature([User, UserAddress, UserAbout]),
+    TypeOrmModule.forFeature([User, UserAddress, UserAbout, FriendRequest]),
 
     CacheModule.registerAsync({
       isGlobal: true,
@@ -75,6 +77,7 @@ import { UserAboutService } from './services/user_about.service';
     UsersService,
     UserAddressService,
     UserAboutService,
+    FriendRequestService,
 
     // * domains
     TransactionDomain,

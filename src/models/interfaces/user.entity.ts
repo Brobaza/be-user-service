@@ -15,6 +15,7 @@ import {
 } from 'typeorm';
 import { UserAddress } from './user_address.entity';
 import { UserAbout } from './user.about';
+import { FriendRequest } from './friend_requests.entity';
 
 @Entity({ name: 'users' })
 export class User extends BaseEntity {
@@ -89,6 +90,12 @@ export class User extends BaseEntity {
     default: Role.CLIENT,
   })
   role: Role;
+
+  @OneToMany(() => User, (user) => user.friendRequest)
+  friendRequest: FriendRequest[];
+
+  @OneToMany(() => User, (user) => user.friendRequest)
+  friendRequestReceived: FriendRequest[];
 
   @OneToMany(() => UserAddress, (address) => address.user)
   addresses: UserAddress[];

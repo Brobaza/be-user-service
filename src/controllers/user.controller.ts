@@ -1,7 +1,8 @@
 import { Controller, Logger } from '@nestjs/common';
 import { filter, get, isEmpty, map } from 'lodash';
+import { Observable } from 'rxjs';
 import { ErrorDictionary } from 'src/enums/error.dictionary';
-import { EGender } from 'src/enums/gender';
+import { FriendRequestType } from 'src/enums/friend-request-type.enum';
 import {
   CreateAddressRequest,
   CreateUserRequest,
@@ -14,22 +15,30 @@ import {
   GetAllRelatedFriendResponse,
   GetDefaultAddressRequest,
   GetDefaultAddressResponse,
+  getListFriendRequestReq,
+  getListFriendRequestRes,
   GetUserByUserNameRequest,
   GetUserRequest,
   GetUserResponse,
+  isOnFriendListReq,
+  isOnFriendListRes,
   ManageAddressResponse,
   ManageUserResponse,
+  mockFriendListReq,
+  mockFriendListRes,
+  sendFriendRequestReq,
+  sendFriendRequestRes,
   UpdateAddressRequest,
+  updateStatusFriendRequestReq,
   UpdateUserRequest,
   UserServiceController,
   UserServiceControllerMethods,
 } from 'src/gen/user.service';
-import { User } from 'src/models/interfaces/user.entity';
 import { UserAddressService } from 'src/services/address.service';
+import { FriendRequestService } from 'src/services/friend_request.service';
 import { UsersService } from 'src/services/user.service';
 import { convertToUserProto } from 'src/utils/converters';
 import { compactInObject } from 'src/utils/helpers';
-import { DeepPartial } from 'typeorm';
 
 @Controller()
 @UserServiceControllerMethods()
@@ -39,6 +48,7 @@ export class UsersController implements UserServiceController {
   constructor(
     private readonly usersService: UsersService,
     private readonly userAddressService: UserAddressService,
+    private readonly friendRequestService: FriendRequestService,
   ) {}
 
   async getAllRelatedFriend(
@@ -397,6 +407,181 @@ export class UsersController implements UserServiceController {
           message: 'Default address not found',
           code: '404',
           errMessage: err.message,
+        },
+      };
+    }
+  }
+
+  // * friend request
+  async getListFriendRequest(
+    request: getListFriendRequestReq,
+  ): Promise<getListFriendRequestRes> {
+    const { userId, limit, page } = request;
+    this.logger.log(`>>> get list friend request: ${userId}`);
+
+    try {
+      const { items, total } = await this.friendRequestService.getFriendList({
+        userId,
+        limit,
+        page,
+      });
+
+      return {
+        friendRequests: map(
+          filter(items, (i) => i.id !== userId),
+          (item) => convertToUserProto(item),
+        ),
+        total,
+        metadata: {
+          message: 'Friend requests found',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (error) {
+      this.logger.error(error);
+
+      return {
+        friendRequests: [],
+        total: 0,
+        metadata: {
+          code: JSON.stringify(get(error, 'response.status', 500)),
+          message: get(error, 'response.code', 'Internal Server Error'),
+          errMessage: error.message,
+        },
+      };
+    }
+  }
+
+  async updateStatusFriendRequest(
+    request: updateStatusFriendRequestReq,
+  ): Promise<ManageUserResponse> {
+    const { userId, friendRequestId, status } = request;
+
+    try {
+      const friendRequest = await this.friendRequestService.updateFriendRequest(
+        {
+          userId,
+          friendRequestId,
+          status: status as FriendRequestType,
+        },
+      );
+
+      return {
+        id: friendRequest.id,
+        message: 'Friend request updated successfully',
+        code: '200',
+        errMessage: '',
+      };
+    } catch (error) {
+      this.logger.error(error);
+
+      return {
+        id: '',
+        code: JSON.stringify(get(error, 'response.status', 500)),
+        message: get(error, 'response.code', 'Internal Server Error'),
+        errMessage: error.message,
+      };
+    }
+  }
+
+  async isOnFriendList(req: isOnFriendListReq): Promise<isOnFriendListRes> {
+    const { userId, friendId } = req;
+    this.logger.log(
+      `>>> check if user is on friend list: ${userId}, ${friendId}`,
+    );
+
+    try {
+      const isOnFriendList = await this.friendRequestService.isOnFriendList({
+        userId,
+        friendId,
+      });
+
+      return {
+        confirm: isOnFriendList,
+        metadata: {
+          message: 'Friend list checked successfully',
+          code: '200',
+
+          errMessage: '',
+        },
+      };
+    } catch (error) {
+      this.logger.error(error);
+
+      return {
+        confirm: false,
+        metadata: {
+          code: JSON.stringify(get(error, 'response.status', 500)),
+          message: get(error, 'response.code', 'Internal Server Error'),
+          errMessage: error.message,
+        },
+      };
+    }
+  }
+
+  async sendFriendRequest(
+    payload: sendFriendRequestReq,
+  ): Promise<sendFriendRequestRes> {
+    const { userId, friendId } = payload;
+    this.logger.log(`>>> send friend request: ${userId}, ${friendId}`);
+
+    try {
+      const friendRequest = await this.friendRequestService.sendFriendRequest({
+        userId,
+        friendId,
+      });
+
+      return {
+        id: friendRequest.id,
+        metadata: {
+          message: 'Friend request sent successfully',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (error) {
+      this.logger.error(error);
+
+      return {
+        id: '',
+        metadata: {
+          message: 'Failed to send friend request',
+          code: '400',
+          errMessage: error.message,
+        },
+      };
+    }
+  }
+
+  async mockFriendList(request: mockFriendListReq): Promise<mockFriendListRes> {
+    const { userId } = request;
+
+    this.logger.log(`>>> mock friend list: ${userId}`);
+
+    try {
+      const { users } = await this.friendRequestService.mockFriends(userId);
+      return {
+        friends: map(
+          filter(users, (i) => i.id !== userId),
+          (item) => convertToUserProto(item),
+        ),
+        total: users.length,
+        metadata: {
+          message: 'Mock friend list found',
+          code: '200',
+          errMessage: '',
+        },
+      };
+    } catch (error) {
+      this.logger.error(error);
+      return {
+        friends: [],
+        total: 0,
+        metadata: {
+          code: JSON.stringify(get(error, 'response.status', 500)),
+          message: get(error, 'response.code', 'Internal Server Error'),
+          errMessage: error.message,
         },
       };
     }
