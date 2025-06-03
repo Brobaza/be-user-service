@@ -119,7 +119,7 @@ export class FriendRequestService extends BaseService<FriendRequest> {
 
       const friendRequest = head(items);
 
-      if ((friendRequest.sender.id == userId)) {
+      if (friendRequest.sender.id == userId) {
         // * user is sender
         // * request only allow to DELETED
         if (status !== FriendRequestType.DELETED) {
@@ -253,8 +253,11 @@ export class FriendRequestService extends BaseService<FriendRequest> {
       take: limit,
     });
 
+    const userList = items.map((item) => item.receiver);
+    console.log('userList: ', userList);
+
     return {
-      items,
+      items: userList,
       total,
     };
   }

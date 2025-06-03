@@ -10,15 +10,15 @@ verificationPath:
   resetPassword: /reset-password
 
 redis:
-  host: localhost
+  host: redis
   port: 6379
   password: ''
   database: 0
   prefix: 'dailydev'
 
 postgres:
-  host: localhost
-  port: 5433
+  host: postgres
+  port: 5432
   username: postgres
   password: postgres
   database: user_service
@@ -29,9 +29,9 @@ agenda:
   database: agenda
 
 mongo:
-  uri: mongodb://localhost:27017
+  uri: mongodb://mongo:27017
   username: root
-  password: '123456'
+  password: Kien123
   port: 27017
 
 smtp:
@@ -52,8 +52,8 @@ jwt:
 
 kafka:
   brokers:
-    - localhost:9092
-  groupId: queue-service
+    - kafka:29092
+  groupId: chat-notification-service
   topics:
     - name: topic1
       partitions: 3
@@ -63,22 +63,22 @@ services:
   auth:
     prefix: /api
     version: '1'
-    container_name: localhost
+    container_name: be-auth-service
     port: '3002'
   user:
     prefix: /api
     version: '1'
-    container_name: localhost
+    container_name: be-user-service
     port: '3004'
   mail:
     prefix: /api
     version: '1'
-    container_name: localhost
+    container_name: be-user-service
     port: '3004'
   chat:
     prefix: /api
     version: '1'
-    container_name: localhost
+    container_name: be-user-service
     port: '3004'
 
 redisLock:
